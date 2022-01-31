@@ -1,0 +1,201 @@
+create table readers
+(
+    id_reader serial primary key,
+    first_name character varying(30),
+	last_name character varying(30),
+	birth_date date
+);
+insert into readers (first_name, last_name, birth_date) values 
+('Genady', 'Gorin', '21-12-1969'),
+('Ilnur', 'Makhmutov', '20-02-2000'),
+('Ivan', 'Ivanov', '01-01-1991'),
+('Viktor', 'Pososov', '07-04-1488'),
+('Ruzel', 'Kukuruzov', '23-10-2005'),
+('Rodion', 'Raskolnikov', '16-05-1999'),
+('Katya', 'Kalskova', '03-06-2002'),
+('Steve', 'Jobs', '24-02-1955'),
+('Dmitry', 'Technocratov', '09-03-1984'),
+('Vladimir', 'Putin', '31-08-2014');
+
+select id_reader, first_name, last_name, to_char(birth_date, 'dd.mm.yyyy') as birth from readers;
+
+
+
+create table books
+(
+    id_book serial primary key,
+    book_name character varying(100),
+	author_name character varying(30),
+	printing_date date
+);
+
+insert into books (book_name, author_name, printing_date) values 
+('Crime and Punishment', 'Fedor Dostoevsky', '01.01.1987'),
+('Fathers and Sons', 'Ivan Turgenev', '01.01.1987'),
+('Jane Eyre', 'Charlotte Bronte', '01.01.2009'),
+('The Days of the Turbins', 'Mikhail Bulgakov', '01.01.2019'),
+('Empire V', 'Victor Pelevin', '01.01.2014'),
+('Lolita', 'Vladimir Nabokov', '01.01.1993'),
+('The Gadfly', 'Ethel Lilian Voynich', '01.01.2015'),
+('Testing for Stupid', 'Dmitry Technocratov', '01.01.2021'),
+('Harry Potter', 'Joanne Rowling', '01.01.2010'),
+('The Witcher', 'Andrzej Sapkowski', '01.01.2013');
+
+select id_book, book_name, author_name, to_char(printing_date, 'yyyy') as printing from books;
+
+
+
+create table documentation
+(
+    id_recording serial primary key,
+    id_book integer references books(id_book),
+	id_reader integer references readers(id_reader),
+	taking_date timestamp,
+	delivery_date date,
+	real_delivery_date date,
+	status boolean
+);
+
+insert into documentation(id_book, id_reader, taking_date, delivery_date, real_delivery_date, status) 
+values
+(
+	(select id_book from books where book_name = 'Fathers and Sons'),
+	(select id_reader from readers where first_name = 'Katya'),
+	'14-12-2021 13:00',
+	(select '14-12-2021'::date + interval '30 days'),
+	'31-12-2021',
+	true
+),
+(
+	(select id_book from books where book_name = 'The Days of the Turbins'),
+	(select id_reader from readers where first_name = 'Ivan'),
+	'06-10-2021 17:23',
+	(select '06-10-2021'::date + interval '30 days'),
+	'25-11-2021',
+	true
+),
+(
+	(select id_book from books where book_name = 'Harry Potter'),
+	(select id_reader from readers where first_name = 'Viktor'),
+	'08-09-2021 12:30',
+	(select '08-09-2021'::date + interval '30 days'),
+	null,
+	false
+),
+(
+	(select id_book from books where book_name = 'The Witcher'),
+	(select id_reader from readers where first_name = 'Ruzel'),
+	'03-01-2022 09:10',
+	(select '03-01-2022'::date + interval '30 days'),
+	'28-01-2022',
+	true
+),
+(
+	(select id_book from books where book_name = 'Empire V'),
+	(select id_reader from readers where first_name = 'Ilnur'),
+	'15-12-2021 15:41',
+	(select '15-12-2021'::date + interval '30 days'),
+	'12-01-2022',
+	true
+),
+(
+	(select id_book from books where book_name = 'The Gadfly'),
+	(select id_reader from readers where first_name = 'Vladimir'),
+	'29-11-2021 16:03',
+	(select '29-11-2021'::date + interval '30 days'),
+	null,
+	false
+),
+(
+	(select id_book from books where book_name = 'Testing for Stupid'),
+	(select id_reader from readers where first_name = 'Dmitry'),
+	'25-11-2021 10:18',
+	(select '25-11-2021'::date + interval '30 days'),
+	null,
+	false
+),
+(
+	(select id_book from books where book_name = 'Lolita'),
+	(select id_reader from readers where first_name = 'Genady'),
+	'05-09-2021 10:21',
+	(select '05-09-2021'::date + interval '30 days'),
+	'15-11-2021',
+	true
+),
+(
+	(select id_book from books where book_name = 'Jane Eyre'),
+	(select id_reader from readers where first_name = 'Steve'),
+	'11-01-2022 13:29',
+	(select '11-01-2022'::date + interval '30 days'),
+	'23-01-2022',
+	true
+),
+(
+	(select id_book from books where book_name = 'Crime and Punishment'),
+	(select id_reader from readers where first_name = 'Rodion'),
+	'19-10-2021 18:00',
+	(select '19-10-2021'::date + interval '30 days'),
+	null,
+	false
+);
+
+select id_recording, id_book, id_reader, 
+to_char(taking_date, 'dd.mm.yyyy hh24:mm') as taking,
+to_char(delivery_date, 'dd.mm.yyyy') as delivery, to_char(real_delivery_date, 'dd.mm.yyyy') as real_delivery, status from documentation;
+
+
+
+
+
+select readers.first_name, books.book_name, 
+to_char(taking_date, 'dd.mm.yyyy hh24:mm') as taking, 
+to_char(delivery_date, 'dd.mm.yyyy') as delivery
+from readers, books, documentation
+where documentation.id_book = books.id_book 
+and documentation.id_reader = readers.id_reader;
+
+select readers.first_name, documentation.status
+from readers, documentation
+where documentation.id_reader = readers.id_reader;
+
+select readers.first_name, readers.last_name, 
+real_delivery_date - taking_date::date as intervall, 
+(real_delivery_date - taking_date::date) >= 30 is false as delay_status
+from readers, documentation
+where documentation.id_reader = readers.id_reader 
+and documentation.status = true;
+
+select readers.first_name, readers.last_name, 
+(select current_date) - taking_date::date as intervall, 
+documentation.status as delay_status
+from readers, documentation
+where documentation.id_reader = readers.id_reader 
+and documentation.status = false;
+
+select book_name, author_name, to_char(printing_date, 'yyyy'), 
+(printing_date >= '01-01-2010') is true as new_book
+from books;
+
+select first_name, last_name, to_char(birth_date, 'dd.mm.yyyy'),
+((current_date - birth_date) / 365) as age
+from readers
+where ((current_date - birth_date) / 365) >= 18;
+
+select first_name, last_name, to_char(birth_date, 'dd.mm.yyyy'),
+((current_date - birth_date) / 365) as age
+from readers
+where ((current_date - birth_date) / 365) <= 18;
+
+select books.book_name, books.author_name, documentation.status
+from books, documentation
+where documentation.id_book = books.id_book and documentation.status = true;
+
+select books.book_name, books.author_name, documentation.status
+from books, documentation
+where documentation.id_book = books.id_book and documentation.status = false;
+
+select book_name, author_name, to_char(printing_date, 'yyyy')
+from books, documentation, readers
+where documentation.id_book = books.id_book and 
+documentation.id_reader = readers.id_reader and 
+((current_date - readers.birth_date) / 365) <= 18;
